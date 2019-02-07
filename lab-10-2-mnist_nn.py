@@ -17,7 +17,7 @@ training_epochs = 15
 batch_size = 100
 
 # input place holders
-X = tf.placeholder(tf.float32, [None, 784])
+X = tf.placeholder(tf.float32, [None, 784]) # 첫번째단은 쉬움 # 입력
 Y = tf.placeholder(tf.float32, [None, 10])
 
 # weights & bias for nn layers

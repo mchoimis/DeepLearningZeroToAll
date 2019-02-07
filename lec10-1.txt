@@ -1,0 +1,107 @@
+* lec10-1: ReLU
+layer가 길어질 수록
+2단, 3단까지는 괜찮았지만 그 이상은
+vanishing gradient 문제가 발생 
+(2차 겨울: 1986-2006)
+
+Hinton: We used the wrong type of non-linearty (activation function을 시그모이드 함수로 쓴 것)
+-> 1보다 작아지지 않게 하면 되지 않을까?
+-> ReLU (Rectified Linear Unit)
+-> 0보다 작을경우 꺼버리고, 1보다 클 경우 커질대로 커지게 (역 ㄴ자 형태)
+
+코딩으로 풀어보면,
+L1 = tf.sigmoid(tf.matmul(X, W1) + b1)
+에서
+
+L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
+로 바뀌게 됨
+
+(더이상 시그모이드를 쓰는 것은 좋지 않다)
+-> Max(0, x)
+-> 마지막 단의 출력은 시그모이드를 씀, 왜냐면 출력은 0에서 1사이의 값을 가지기 때문
+
+조금씩 다른 형태의 ReLU
+Leaky ReLU: 0보다 작은 것을 끄기 보단 조금 남겨둠
+-> max(0.1x, x)
+
+ELU: 
+Maxout
+tanh: 시그모이드를 -1에서 1 사이의 값으로 쓰기 위해
+
+시그모이드는 수렴이 안됨. (역전파를 쓸 때 그 전 레이어의 인풋으로 쓰이기 때문에)
+등
+
+* lec10-2: 초기화(Weight Initialization)를 잘 해보자
+만약에 weight를 쿨하게 0으로 두자
+W=0이면, x도 다 0이 나옴 -> gradient 가 사라지게 되는 문제
+Hinton et al. (2006) "A Fast Learning Algorithm for Deep Belief Nets"
+- Restricted Boltzmann Machine (RBM) 지금은 많이 사용하지 않지만 
+RBM를 써서초기화 하는 것을 한번 배워보자
+
+인코더, 디코더
+오토인코더, 디코더
+
+첫 2개 레이어 사이에서 인코더, 디코더 반복해서 웨이트의 초기값을 그 중간값과 비슷하게 만드는 
+그 다음 단계에서 다시 2개 레이어 사이에서 인코더, 디코더를 반복하다가 웨이트 계산
+
+당시 혁신적인 논문: 이렇게 깊은 네트워크를 어떻게 학습할까요? 초기화값을 잘 주면 됩니다.
+어떻게?  RBM을 써서 fine-tuning을 하면 됩니다.
+
+- 그 외 다른 방법
+입력값과 출력값의 개수에 비례해서 계산 (fan_in, fan_out)/np.sqart(fan_in)
+Xavier Initialization: X. Glorot and Y. Bengio "Understanding the difficulty of training deep feedforward neural networks" 2010
+
+이미지 인식의 오류를 3% 이하로 떨어뜨린 Resnet 발명자
+He et al. 2015 (fan_in, fan_out)/np.sqart(fan_in/2)
+
+* lec10-3: Dropout과 모델 앙상블
+
+overfitting
+: 레이어를 많이 쓸 수록 error가 떨어지는데 실전데이터를 사용하면 떨어지다가 다시 올라감
+
+오버피팅 방지를 위한 방법 
+1. regularization: let's not have too big numbers in the weight
+cost + lambda*sum(w^2) 
+         -------------------- cost에 이 term 추가 (regularization strength)
+
+l2reg = 0.001 * tf.reduce_sum(tf.square(W)) 
+
+
+2. Dropout :  A simple way to prevent neural newtworks from overfitting
+(Srivastava et al. 2014)
+
+학습할 때 임의적으로 노드를 끊어버리자
+randomly set some neurons to zero
+
+- 코드 - 
+dropout_rate = tf.placeholder('float')
+_L1 = tf.nn.relu(tf.add(tf.matmul(X, W1), B1))
+L1 = tf.nn.dropout(_L1, dropout_rate) 
+# L1을 만들고 바로 그 다음 layer 로 보내기 전에 dropout layer 에 먼저 보냄
+얼마나 버릴까?: dropout_rate, 보통 0.5 씀 (반을 버리는 것)
+
+# 중요
+## TRAIN: # 0.7만
+sess.run(optimizer, feed_dict={X: batch_xs, Y: batch_ys, dropout_rate:0.7})
+
+## EVALUATION: # 전체 다 
+print('aAccuracy', accuracy.eval({X: mnist.test.images, Y: mnist.test.labels, dropout_rate=1})
+
+
+3. 앙상블
+
+
+* lec 10-4: 레고처럼 네트웤 모듈 쌓기
+
+
+- Fast Foward (1단계 앞이 아닌 2단계 앞으로 출력값을 보냄)
+- Split & Merge (나눠서 입력을 넣는다)
+- Recurrent Network (앞으로만 네트워크가 나가는 게 아니라 옆으로도 가면 안될까?)
+= RNN
+ 
+어떠한 형태로는 어떠한 조합으로 값이 나오면 원하는대로 해볼 수 있음
+
+
+
+
+
